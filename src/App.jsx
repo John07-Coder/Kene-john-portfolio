@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import KineticName from './KineticName.jsx'
-import { directions, nav, profile, skills } from './data.js'
+import { directions, nav, profile, projects, skills } from './data.js'
 
 function useReveal() {
   useEffect(() => {
@@ -20,6 +20,53 @@ function useReveal() {
     nodes.forEach((node) => observer.observe(node))
     return () => observer.disconnect()
   }, [])
+}
+
+function ProjectCard({ project, index }) {
+  const [active, setActive] = useState(0)
+  const shot = project.shots[active]
+
+  return (
+    <article className="project" data-reveal style={{ '--stagger': index }}>
+      <div className="project__media">
+        <div className="project__stage">
+          <img src={shot.src} alt={shot.alt} />
+        </div>
+        <div className="project__thumbs">
+          {project.shots.map((item, shotIndex) => (
+            <button
+              key={item.src}
+              type="button"
+              className={shotIndex === active ? 'is-active' : undefined}
+              aria-pressed={shotIndex === active}
+              aria-label={item.label}
+              onClick={() => setActive(shotIndex)}
+            >
+              <img src={item.src} alt="" />
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="project__body">
+        <p className="project__index">0{index + 1}</p>
+        <h3>{project.title}</h3>
+        <p>{project.summary}</p>
+        <ul className="project__tags">
+          {project.tags.map((tag) => (
+            <li key={tag}>{tag}</li>
+          ))}
+        </ul>
+        <a
+          className="btn btn--ghost"
+          href={project.github}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Bekijk op GitHub
+        </a>
+      </div>
+    </article>
+  )
 }
 
 export default function App() {
@@ -98,19 +145,20 @@ export default function App() {
             Beschikbaar voor stage & junior opdrachten
           </div>
           <p className="hero__kicker hero-enter" style={{ '--d': '90ms' }}>
-            Junior software developer · 18 jaar
+            Junior software developer · {profile.age} jaar
           </p>
           <KineticName />
           <p className="hero__hint hero-enter" style={{ '--d': '320ms' }}>
             Beweeg door de letters
           </p>
           <p className="hero__lead hero-enter" style={{ '--d': '380ms' }}>
-            Derdejaars MBO 4 Software Development. Ik bouw webapps met PHP,
-            Laravel en React — en duik nu in .NET, cybersecurity en cloud.
+            Tweedejaars student Software Development. Ik bouw webapps met PHP,
+            Laravel en React — van een kapsalon waar je online boekt tot een
+            helpdesk met rollen — en leer daarnaast .NET, cybersecurity en cloud.
           </p>
           <div className="hero__actions hero-enter" style={{ '--d': '480ms' }}>
-            <a className="btn btn--solid" href="#stack">
-              Bekijk mijn stack
+            <a className="btn btn--solid" href="#projecten">
+              Bekijk mijn projecten
             </a>
             <a className="btn btn--ghost" href="#contact">
               Laten we praten
@@ -136,17 +184,19 @@ export default function App() {
           </div>
           <div className="about">
             <p className="about__lead" data-reveal style={{ '--stagger': 1 }}>
-              Ik ben Kene John. Achttien, derdejaars student Software Development
-              op MBO 4, en vooral nieuwsgierig naar hoe je van een idee een
-              echte, stabiele applicatie maakt.
+              Ik ben Kene John. Negentien, tweedejaars student Software
+              Development op MBO 4. Ik maak het liefst een applicatie die iemand
+              écht kan openen: boeken, toewijzen, bevestigen — niet alleen een
+              scherm dat er af is.
             </p>
             <div className="about__grid">
               <article data-reveal style={{ '--stagger': 1 }}>
                 <h3>Wat ik nu doe</h3>
                 <p>
-                  Ik werk met PHP en Laravel aan de backend, en met React, HTML
-                  en CSS aan de voorkant. Daarnaast leer ik .NET — C# voelt als
-                  de logische volgende stap naast wat ik al bouw.
+                  Ik bouw met PHP en Laravel aan de backend, en met React, HTML
+                  en CSS aan de voorkant. Twee van die apps staan op GitHub:
+                  Kapsalon De Knip en een ticket-systeem met drie rollen.
+                  Daarnaast leer ik .NET.
                 </p>
               </article>
               <article data-reveal style={{ '--stagger': 2 }}>
@@ -154,7 +204,8 @@ export default function App() {
                 <p>
                   Niet alleen features opleveren, maar software die veilig,
                   onderhoudbaar en schaalbaar is. Daarom trekken cybersecurity
-                  en cloud me extra: de laag achter de interface.
+                  en cloud me extra: authenticatie, rechten, deploy en de laag
+                  achter de interface.
                 </p>
               </article>
             </div>
@@ -165,17 +216,29 @@ export default function App() {
               </div>
               <div>
                 <dt>Jaar</dt>
-                <dd>3e leerjaar</dd>
+                <dd>2e leerjaar</dd>
               </div>
               <div>
                 <dt>Leeftijd</dt>
-                <dd>18</dd>
+                <dd>{profile.age}</dd>
               </div>
               <div>
                 <dt>Focus</dt>
                 <dd>Security &amp; cloud</dd>
               </div>
             </dl>
+          </div>
+        </section>
+
+        <section id="projecten" className="section">
+          <div className="section__head" data-reveal>
+            <p className="eyebrow">Projecten</p>
+            <h2>Twee apps die ik zelf heb gebouwd.</h2>
+          </div>
+          <div className="projects">
+            {projects.map((project, index) => (
+              <ProjectCard key={project.title} project={project} index={index} />
+            ))}
           </div>
         </section>
 
@@ -238,6 +301,9 @@ export default function App() {
 
       <footer className="footer">
         <span>{profile.name}</span>
+        <a href={profile.github} target="_blank" rel="noreferrer">
+          GitHub
+        </a>
         <span>© {new Date().getFullYear()}</span>
       </footer>
     </>
