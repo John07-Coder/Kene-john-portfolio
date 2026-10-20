@@ -30,7 +30,7 @@ function ProjectCard({ project, index }) {
     <article className="project" data-reveal style={{ '--stagger': index }}>
       <div className="project__media">
         <div className="project__stage">
-          <img src={shot.src} alt={shot.alt} />
+          <img src={shot.src} alt={shot.alt} decoding="async" />
         </div>
         <div className="project__thumbs">
           {project.shots.map((item, shotIndex) => (
@@ -42,7 +42,7 @@ function ProjectCard({ project, index }) {
               aria-label={item.label}
               onClick={() => setActive(shotIndex)}
             >
-              <img src={item.src} alt="" />
+              <img src={item.src} alt="" decoding="async" loading="lazy" />
             </button>
           ))}
         </div>
@@ -97,7 +97,6 @@ export default function App() {
         <span className="glow__blob glow__blob--b" />
         <span className="glow__blob glow__blob--c" />
       </div>
-      <div className="noise" aria-hidden="true" />
       <header className={`nav ${scrolled ? 'nav--scrolled' : ''}`}>
         <a className="nav__mark" href="#top">
           {profile.short}

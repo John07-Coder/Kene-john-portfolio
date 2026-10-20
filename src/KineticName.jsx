@@ -3,7 +3,6 @@ import { useEffect, useRef } from 'react'
 const LINES = ['KENE', 'JOHN']
 const LIME = '#c8f542'
 const MAGENTA = '#ff4fd8'
-const CREAM = '#f2f0ea'
 
 export default function KineticName() {
   const wrapRef = useRef(null)
@@ -11,64 +10,98 @@ export default function KineticName() {
 
   useEffect(() => {
     const wrap = wrapRef.current
-    if (!wrap) return
+    if (!wrap) return undefined
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduced) return undefined
 
-    const mouse = { x: 0.5, y: 0.5, inside: false }
-    let raf
+    const chars = charsRef.current.filter(Boolean)
+    const mouse = { x: 0.5, y: 0.5 }
+    let raf = 0
+    let hovering = false
+    let visible = true
+    let box = { left: 0, top: 0, width: 1, height: 1 }
+
+    const paint = () => {
+      for (const el of chars) {
+        const index = Number(el.dataset.i)
+        const line = Number(el.dataset.li)
+        const len = Number(el.dataset.len)
+        const nx = (index + 0.5) / len
+        const ny = (line + 0.5) / LINES.length
+        const dist = Math.hypot(mouse.x - nx, (mouse.y - ny) * 1.35)
+        const energy = Math.max(0, 1 - dist / 0.64)
+        const hot = energy > 0.18
+        const flag = hot ? '1' : '0'
+        const lift = -energy * 12
+        const rot = (nx - 0.5) * energy * 4
+        const scale = 1 + energy * 0.05
+
+        el.style.transform = `translate3d(0, ${lift.toFixed(2)}px, 0) rotate(${rot.toFixed(2)}deg) scale(${scale.toFixed(3)})`
+        if (el.dataset.hot !== flag) {
+          el.dataset.hot = flag
+          el.style.color = hot ? ((index + line) % 2 === 0 ? LIME : MAGENTA) : ''
+        }
+      }
+    }
+
+    const loop = () => {
+      paint()
+      raf = requestAnimationFrame(loop)
+    }
+
+    const start = () => {
+      if (!hovering || !visible) return
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(loop)
+    }
+
+    const stop = () => {
+      cancelAnimationFrame(raf)
+    }
+
+    const onEnter = (event) => {
+      box = wrap.getBoundingClientRect()
+      hovering = true
+      mouse.x = (event.clientX - box.left) / (box.width || 1)
+      mouse.y = (event.clientY - box.top) / (box.height || 1)
+      wrap.classList.add('kinetic--live')
+      start()
+    }
 
     const onMove = (event) => {
-      const box = wrap.getBoundingClientRect()
-      mouse.x = (event.clientX - box.left) / box.width
-      mouse.y = (event.clientY - box.top) / box.height
-      mouse.inside = true
+      mouse.x = (event.clientX - box.left) / (box.width || 1)
+      mouse.y = (event.clientY - box.top) / (box.height || 1)
     }
 
     const onLeave = () => {
-      mouse.inside = false
+      hovering = false
+      stop()
+      wrap.classList.remove('kinetic--live')
+      for (const el of chars) {
+        el.style.transform = ''
+        el.style.color = ''
+        delete el.dataset.hot
+      }
     }
 
-    const tick = (now) => {
-      charsRef.current.forEach((el) => {
-        if (!el) return
-        const { i, li, len } = el.dataset
-        const index = Number(i)
-        const line = Number(li)
-        const nx = (index + 0.5) / Number(len)
-        const ny = (line + 0.5) / LINES.length
-
-        let energy
-        if (mouse.inside) {
-          const dist = Math.hypot(mouse.x - nx, (mouse.y - ny) * 1.35)
-          energy = Math.max(0, 1 - dist / 0.64)
-        } else {
-          energy = (0.5 + 0.5 * Math.sin(now / 620 + index * 0.72 + line * 1.15)) * 0.46
-        }
-
-        const lift = energy * 12
-        const rot = (nx - 0.5) * energy * 4
-        const scale = 1 + energy * 0.05
-        const accent = (index + line) % 2 === 0 ? LIME : MAGENTA
-        const mix = Math.min(1, energy * 1.45)
-
-        el.style.transform = `translateY(${-lift}px) rotate(${rot}deg) scale(${scale})`
-        el.style.color = mix > 0.1 ? accent : CREAM
-        el.style.textShadow =
-          mix > 0.18
-            ? `${10 * energy}px 0 0 rgba(255,79,216,${0.6 * mix}), ${-10 * energy}px 0 0 rgba(200,245,66,${0.55 * mix})`
-            : 'none'
-      })
-      raf = requestAnimationFrame(tick)
+    const onVisibility = (entries) => {
+      visible = entries[0].isIntersecting
+      wrap.classList.toggle('is-paused', !visible)
+      if (visible) start()
+      else stop()
     }
 
+    const observer = new IntersectionObserver(onVisibility, { threshold: 0 })
+    observer.observe(wrap)
+    wrap.addEventListener('pointerenter', onEnter)
     wrap.addEventListener('pointermove', onMove)
     wrap.addEventListener('pointerleave', onLeave)
-    raf = requestAnimationFrame(tick)
 
     return () => {
       cancelAnimationFrame(raf)
+      observer.disconnect()
+      wrap.removeEventListener('pointerenter', onEnter)
       wrap.removeEventListener('pointermove', onMove)
       wrap.removeEventListener('pointerleave', onLeave)
     }
@@ -82,6 +115,7 @@ export default function KineticName() {
             <span
               key={`${word}-${letter}-${i}`}
               className="kinetic__char"
+              style={{ '--i': li * 4 + i }}
               data-i={i}
               data-li={li}
               data-len={word.length}

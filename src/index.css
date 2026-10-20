@@ -88,8 +88,7 @@ button {
 .glow__blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.55;
+  contain: strict;
 }
 
 .glow__blob--a {
@@ -97,7 +96,7 @@ button {
   height: min(42vw, 420px);
   top: -8%;
   right: 8%;
-  background: rgba(200, 245, 66, 0.22);
+  background: radial-gradient(circle, rgba(200, 245, 66, 0.22) 0%, rgba(200, 245, 66, 0) 70%);
   animation: floatA 14s ease-in-out infinite;
 }
 
@@ -106,7 +105,7 @@ button {
   height: min(38vw, 360px);
   top: 28%;
   left: -8%;
-  background: rgba(90, 210, 180, 0.16);
+  background: radial-gradient(circle, rgba(90, 210, 180, 0.16) 0%, rgba(90, 210, 180, 0) 70%);
   animation: floatB 18s ease-in-out infinite;
 }
 
@@ -115,7 +114,7 @@ button {
   height: min(34vw, 320px);
   top: 8%;
   left: 32%;
-  background: rgba(255, 79, 216, 0.2);
+  background: radial-gradient(circle, rgba(255, 79, 216, 0.18) 0%, rgba(255, 79, 216, 0) 70%);
   animation: floatA 16s ease-in-out infinite reverse;
 }
 
@@ -137,16 +136,6 @@ button {
   50% {
     transform: translate(50px, -30px) scale(1.18);
   }
-}
-
-.noise {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  opacity: 0.045;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 .nav {
@@ -412,7 +401,23 @@ button {
 
 .kinetic__char {
   display: block;
-  will-change: transform, color, text-shadow;
+  animation: kineticIdle 3.4s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 90ms);
+}
+
+.kinetic--live .kinetic__char,
+.kinetic.is-paused .kinetic__char {
+  animation: none;
+}
+
+@keyframes kineticIdle {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -7px, 0);
+  }
 }
 
 .hero__hint {
@@ -847,9 +852,9 @@ button {
   }
 
   .kinetic__char {
+    animation: none;
     transform: none !important;
     color: inherit !important;
-    text-shadow: none !important;
   }
 
   .btn:hover,
